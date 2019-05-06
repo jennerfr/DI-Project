@@ -1,0 +1,12 @@
+name: "my-website"
+navbar:
+  title: "My Website"
+  left:
+    - text: "Plot1"
+      href: index.html
+    - text: "Plot2"
+      href: about.html
+output:
+  html_document:
+    theme: cosmo
+    highlight: textmate

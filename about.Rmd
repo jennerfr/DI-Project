@@ -1,0 +1,68 @@
+---
+title: "Plot2"
+---
+
+```{r, echo = F, results='hide'}
+url <- "https://datahub.io/sports-data/spanish-la-liga/r/spanish-la-liga_zip.zip"
+wd <- "C:\\Users\\Jenner\\Desktop\\francodatascience\\DataIncubator\\Section 3\\DATA"
+destfile <- paste(wd, "\\data.zip", sep = "")
+download.file(url = url, destfile = destfile)
+
+###
+
+zipF<- destfile
+outDir<- paste(wd, "\\unzipfolder", sep = "")
+unzip(zipF, exdir=outDir)
+
+###
+
+ff <- paste(outDir, "\\archive", sep="")
+temp = list.files(path = ff, pattern="*.csv")
+myfiles = lapply(paste(ff, "\\", temp, sep = ""), read.csv)
+
+###
+
+DATA <- do.call("rbind", myfiles)
+
+###
+
+suppressWarnings(suppressMessages(library(dplyr)))
+DATAT <- mutate(DATA, Date = as.Date(Date, "%d/%m/%y"))
+DATAT <- mutate(DATAT, TSG = FTHG + FTAG) # Total Sum of Goals
+DATAT <- mutate(DATAT, TST = HST + AST) # Total Sum of Shots on Target ##############
+DATAT <- DATAT[order(DATAT[,1], decreasing = T),]
+DATAT <- mutate(DATAT, OU2.5 = ifelse(TSG > 2.5, "O", "U"))
+DATAT <- mutate(DATAT, OU2.5 = factor(OU2.5))
+str(DATAT)
+
+###
+
+# Almeria (Away Team)
+
+SD <- filter(DATAT, AwayTeam == "Almeria")
+
+###
+
+library(ggplot2)
+
+###
+
+SD <- mutate(SD, OMPR = c(as.character(FTR[2:dim(SD)[1]]), NA)) # One Match Previous Result
+SD <- mutate(SD, TMPR = c(as.character(FTR[3:dim(SD)[1]]), rep(NA, 2))) # Two Matches Previous Result
+SD <- mutate(SD, ThMPR = c(as.character(FTR[4:dim(SD)[1]]), rep(NA, 3))) # Three Matches Previous Result
+
+SD <- mutate(SD, OMPR = factor(OMPR)) # One Match Previous Result
+SD <- mutate(SD, TMPR = factor(OMPR)) # Two Matches Previous Result
+SD <- mutate(SD, ThMPR = factor(OMPR)) # Three Matches Previous Result
+``` 
+
+###
+
+```{r, echo=F, warning=FALSE}
+SD <- mutate(SD, ThMP = c(TST[4:dim(SD)[1]], rep(NA, 3))) # Three Matches Previous Total Sum of Shots on Target
+
+###
+
+ggplot(SD, aes(x = OU2.5, y = ThMP, fill = OU2.5)) + geom_boxplot() +
+       ggtitle("Almeria: Total Sum of Shots on Target for the Three Matches Previous")
+```
